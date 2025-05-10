@@ -108,60 +108,20 @@ int page_replace() {
 }
 
 /**********************************************************
- *  read_write_flash
+ *  helper_copy_block
  *
- *  Performs a flash read or write operation for paging.
- *  Transfers a memory page to or from the U-proc's flash device.
+ *  Copies a block of data from the source address to the 
+ *  destination address. The block is copied in 4-byte 
+ *  increments based on the block size.
  *
  *  Parameters:
- *         pickedSwapPoolFrame – index of the memory frame
- *         devNo – flash device number
- *         blockNo – logical page number in the flash
- *         isRead – 1 for read, 0 for write
+ *         int *src – pointer to the source address
+ *         int *dst – pointer to the destination address
  *
  *  Returns:
+ *         None
  *
  **********************************************************/
-void read_write_flash(int pickedSwapPoolFrame, support_t *currentSupport, int blockNo, int isRead) {
-	int devNo = swapPoolTable[pickedSwapPoolFrame].ASID - 1;
-	if(isRead == TRUE) {
-		devNo = currentSupport->sup_asid - 1;
-	}
-	int flashSemIdx = devSemIdx(FLASHINT, devNo, FALSE);
-
-	/* Get the device register address for the U-proc’s flash device */
-	device_t *flashDevRegAdd = devAddrBase(FLASHINT, devNo);
-
-	SYSCALL(PASSERN, &(mutex[flashSemIdx]), 0, 0);
-
-	/* Write the physical memory address (start of frame) to DATA0 */
-	flashDevRegAdd->d_data0 = (SWAP_POOL_START + (pickedSwapPoolFrame * PAGESIZE));
-
-	/* Choose the correct flash command */
-	int flashCommand;
-	if(isRead == FALSE) {
-		flashCommand = FLASHWRITE;
-	} else {
-		flashCommand = FLASHREAD;
-	}
-
-	/* Disable interrupts to ensure to do atomically */
-	setSTATUS(getSTATUS() & (~IECBITON));
-	/* Write the command to COMMAND register */
-	flashDevRegAdd->d_command = (blockNo << COMMAND_SHIFT) | flashCommand;
-	/* Block the process until the flash operation is complete */
-	int flashStatus = SYSCALL(IOWAIT, FLASHINT, devNo, 0);
-	/* Re-enable interrupts */
-	setSTATUS(getSTATUS() | IECBITON);
-
-	SYSCALL(VERHO, &(mutex[flashSemIdx]), 0, 0);
-
-	if(flashStatus != READY) {
-		program_trap_handler(currentSupport, &swapPoolSema4);
-	}
-}
-
-
 HIDDEN void helper_copy_block(int *src, int *dst){
     int i;
     for (i = 0; i < (BLOCKSIZE/4); i++){
@@ -171,20 +131,42 @@ HIDDEN void helper_copy_block(int *src, int *dst){
     }
 }
 
+/**********************************************************
+ *  write_to_disk_for_pager
+ *
+ *  Writes a block of data to the disk for the pager. The function 
+ *  calculates the cylinder, head, and sector number based on 
+ *  the 2D sector number, and initiates the write operation to 
+ *  the disk. If the sector number exceeds the disk's capacity, 
+ *  a trap is triggered.
+ *
+ *  Parameters:
+ *         int devNo – the device number for the disk
+ *         int sectNo2D – the 2D sector number to write to
+ *         int src – the source address for the data to write
+ *         support_t *currentSupport – pointer to the support struct
+ *
+ *  Returns:
+ *         int – disk status (READY or error code)
+ *
+ **********************************************************/
 void write_to_disk_for_pager(int devNo, int sectNo2D, int src, support_t *currentSupport){
     int disk_sem_idx = devSemIdx(DISKINT, devNo, FALSE);
 
     device_t *disk_dev_reg_addr = devAddrBase(DISKINT, devNo);
 
-    int maxcyl = ((disk_dev_reg_addr->d_data1) >> 16) & 0xFFFF;
-    int maxhead = ((disk_dev_reg_addr->d_data1) >> 8) & 0xFF;
+	/*get dsk capacity*/
+    int maxcyl = ((disk_dev_reg_addr->d_data1) >> MAXCYL_SHIFT) & 0xFFFF;
+    int maxhead = ((disk_dev_reg_addr->d_data1) >> MAXHEAD_SHIFT) & 0xFF;
     int maxsect = (disk_dev_reg_addr->d_data1) & 0xFF;
 
     if (sectNo2D > (maxcyl*maxhead*maxsect)){
         program_trap_handler(currentSupport, NULL);
     }
 
+	/*start writing with mutex*/
     SYSCALL(PASSERN, &(mutex[disk_sem_idx]), 0, 0);
+	/*get the location and do dsk seek to get to the right location on disk*/
         int sectNo = (sectNo2D % (maxhead * maxsect)) % maxsect;
 		int headNo = (sectNo2D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
     	int cylNo = sectNo2D / (maxhead * maxsect);
@@ -196,6 +178,7 @@ void write_to_disk_for_pager(int devNo, int sectNo2D, int src, support_t *curren
             SYSCALL(VERHO, &(mutex[disk_sem_idx]), 0, 0);
             return 0 - disk_status;
         }
+		/*start writing from the RAM frame given*/
         disk_dev_reg_addr->d_data0 = src;
         setSTATUS(getSTATUS() & (~IECBITON));
             disk_dev_reg_addr->d_command = (headNo << HEADNUM_SHIFT) + (sectNo << SECTNUM_SHIFT) + WRITEBLK_DSK; /*write*/
@@ -210,20 +193,42 @@ void write_to_disk_for_pager(int devNo, int sectNo2D, int src, support_t *curren
     }
 }
 
+/**********************************************************
+ *  read_from_disk_for_pager
+ *
+ *  Reads a block of data from the disk for the pager. The function 
+ *  calculates the cylinder, head, and sector number based on 
+ *  the 2D sector number, and initiates the read operation from 
+ *  the disk. If the sector number exceeds the disk's capacity, 
+ *  a trap is triggered.
+ *
+ *  Parameters:
+ *         int devNo – the device number for the disk
+ *         int sectNo2D – the 2D sector number to read from
+ *         int dst – the destination address to store the data
+ *         support_t *currentSupport – pointer to the support struct
+ *
+ *  Returns:
+ *         int – disk status (READY or error code)
+ *
+ **********************************************************/
 HIDDEN void read_from_disk_for_pager(int devNo, int sectNo2D, int dst, support_t *currentSupport){
 	int disk_sem_idx = devSemIdx(DISKINT, devNo, FALSE);
 
     device_t *disk_dev_reg_addr = devAddrBase(DISKINT, devNo);
 
-    int maxcyl = ((disk_dev_reg_addr->d_data1) >> 16) & 0xFFFF;
-    int maxhead = ((disk_dev_reg_addr->d_data1) >> 8) & 0xFF;
+	/*get dsk capacity*/
+    int maxcyl = ((disk_dev_reg_addr->d_data1) >> MAXCYL_SHIFT) & 0xFFFF;
+    int maxhead = ((disk_dev_reg_addr->d_data1) >> MAXHEAD_SHIFT) & 0xFF;
     int maxsect = (disk_dev_reg_addr->d_data1) & 0xFF;
 
     if (sectNo2D > (maxcyl*maxhead*maxsect)){
         program_trap_handler(currentSupport, NULL);
     }
 
+	/*start writing with mutex*/
     SYSCALL(PASSERN, &(mutex[disk_sem_idx]), 0, 0);
+	/*get the location and do dsk seek to get to the right location on disk*/
         int sectNo = (sectNo2D % (maxhead * maxsect)) % maxsect;
 		int headNo = (sectNo2D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
     	int cylNo = sectNo2D / (maxhead*maxsect);
@@ -235,6 +240,7 @@ HIDDEN void read_from_disk_for_pager(int devNo, int sectNo2D, int dst, support_t
             SYSCALL(VERHO, &(mutex[disk_sem_idx]), 0, 0);
             return 0 - disk_status;
         }
+		/*start reading to the RAM frame given*/
         disk_dev_reg_addr->d_data0 = dst;
         setSTATUS(getSTATUS() & (~IECBITON));
             disk_dev_reg_addr->d_command = (headNo << HEADNUM_SHIFT) + (sectNo << SECTNUM_SHIFT) + READBLK_DSK;
@@ -313,17 +319,12 @@ void TLB_exception_handler() {
 		/* Update process x’s backing store.
 		Treat any error status from the write operation as a program trap.*/
 		if((occupiedPgTable->EntryLo & DBITON) == DBITON) { /* D bit set */
-
-			/* isRead = 0 since we are writing */
-			read_write_flash(pickedFrame, currentSupport, write_out_pg_tbl, FALSE);
-			/* write_to_disk_for_pager(RESERVED_DISK_NO, 32*(swapPoolTable[pickedFrame].ASID - 1) + write_out_pg_tbl, SWAP_POOL_START + (pickedFrame * PAGESIZE), currentSupport); */
+			write_to_disk_for_pager(RESERVED_DISK_NO, 32*(swapPoolTable[pickedFrame].ASID - 1) + write_out_pg_tbl, SWAP_POOL_START + (pickedFrame * PAGESIZE), currentSupport);
 		}
 	}
 
-	/* Read the contents of the Current Process’s backingstore/flash device logical page p into frame i. */
-	/* isRead = 1 since we are reading */
-	read_write_flash(pickedFrame, currentSupport, pgTableIndex, TRUE);
-	/* read_from_disk_for_pager(RESERVED_DISK_NO, 32*(currentSupport->sup_asid - 1) + pgTableIndex, SWAP_POOL_START + (pickedFrame * PAGESIZE), currentSupport); */
+	/* Read the contents of the Current Process’s backingstore logical page p into frame i. */
+	read_from_disk_for_pager(RESERVED_DISK_NO, 32*(currentSupport->sup_asid - 1) + pgTableIndex, SWAP_POOL_START + (pickedFrame * PAGESIZE), currentSupport);
 
 	/* Update the Swap Pool table’s entry i to reflect frame i’s new contents: page p belonging to the Current Process’s ASID,
 	and a pointer to the Current Process’s Page Table entry for page p. */

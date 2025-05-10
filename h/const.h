@@ -253,4 +253,7 @@
 
 #define RESERVED_DISK_NO 0
 
+#define MAXCYL_SHIFT 16
+#define MAXHEAD_SHIFT 8
+
 #endif
