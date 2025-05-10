@@ -25,9 +25,6 @@
 #include "../h/pcb.h"
 #include "delayDaemon.h"
 
-#define DAEMON_PROC_ASID 0
-#define NUMBER_OF_SENTINEL 2
-
 HIDDEN delayd_t *delaydFree_h;
 HIDDEN delayd_t *delayd_h;
 HIDDEN int ADL_mutex;
