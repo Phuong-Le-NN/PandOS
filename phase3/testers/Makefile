@@ -42,7 +42,8 @@ all: printerTest.umps strConcat.umps terminalReader.umps asciiArt.umps \
 	swapStress2.umps swapStress3.umps swapStress4.umps swapStress5.umps \
 	swapStress6.umps swapStress7.umps test_oghap.umps \
 	delayTest.umps \
-	diskIOtest.umps
+	diskIOtest.umps \
+	phase4Test.umps
 
 
 	

@@ -4,6 +4,11 @@
 #include "h/tconst.h"
 #include "h/print.h"
 
+#define DISK_PUT 14
+#define DISK_GET 15
+#define FLASH_PUT 16
+#define FLASH_GET 17
+
 #define MILLION	1000000
 
 void main() {
