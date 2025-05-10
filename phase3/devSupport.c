@@ -343,8 +343,8 @@ void READ_FROM_DISK(support_t *currentSupport){
     device_t *disk_dev_reg_addr = devAddrBase(DISKINT, devNo);
 
     /*get disk capacity*/
-    int maxcyl = ((disk_dev_reg_addr->d_data1) >> 16) & 0xFFFF;
-    int maxhead = ((disk_dev_reg_addr->d_data1) >> 8) & 0xFF;
+    int maxcyl = ((disk_dev_reg_addr->d_data1) >> MAXCYL_SHIFT) & 0xFFFF;
+    int maxhead = ((disk_dev_reg_addr->d_data1) >> MAXHEAD_SHIFT) & 0xFF;
     int maxsect = (disk_dev_reg_addr->d_data1) & 0xFF;
 
     /*when setting up backing store as disk, depending on where on disk storing an image, it should be illegal to write there too*/
