@@ -136,13 +136,13 @@ HIDDEN void helper_copy_block(int *src, int *dst){
  *
  *  Writes a block of data to the disk for the pager. The function 
  *  calculates the cylinder, head, and sector number based on 
- *  the 2D sector number, and initiates the write operation to 
+ *  the 1D sector number, and initiates the write operation to 
  *  the disk. If the sector number exceeds the disk's capacity, 
- *  a trap is triggered.
+ *  terminate
  *
  *  Parameters:
  *         int devNo – the device number for the disk
- *         int sectNo2D – the 2D sector number to write to
+ *         int sectNo1D – the 1D sector number to write to
  *         int src – the source address for the data to write
  *         support_t *currentSupport – pointer to the support struct
  *
@@ -150,7 +150,7 @@ HIDDEN void helper_copy_block(int *src, int *dst){
  *         int – disk status (READY or error code)
  *
  **********************************************************/
-void write_to_disk_for_pager(int devNo, int sectNo2D, int src, support_t *currentSupport){
+void write_to_disk_for_pager(int devNo, int sectNo1D, int src, support_t *currentSupport){
     int disk_sem_idx = devSemIdx(DISKINT, devNo, FALSE);
 
     device_t *disk_dev_reg_addr = devAddrBase(DISKINT, devNo);
@@ -160,16 +160,16 @@ void write_to_disk_for_pager(int devNo, int sectNo2D, int src, support_t *curren
     int maxhead = ((disk_dev_reg_addr->d_data1) >> MAXHEAD_SHIFT) & 0xFF;
     int maxsect = (disk_dev_reg_addr->d_data1) & 0xFF;
 
-    if (sectNo2D > (maxcyl*maxhead*maxsect)){
+    if (sectNo1D > (maxcyl*maxhead*maxsect)){
         program_trap_handler(currentSupport, NULL);
     }
 
 	/*start writing with mutex*/
     SYSCALL(PASSERN, &(mutex[disk_sem_idx]), 0, 0);
 	/*get the location and do dsk seek to get to the right location on disk*/
-        int sectNo = (sectNo2D % (maxhead * maxsect)) % maxsect;
-		int headNo = (sectNo2D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
-    	int cylNo = sectNo2D / (maxhead * maxsect);
+        int sectNo = (sectNo1D % (maxhead * maxsect)) % maxsect;
+		int headNo = (sectNo1D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
+    	int cylNo = sectNo1D / (maxhead * maxsect);
         setSTATUS(getSTATUS() & (~IECBITON));
             disk_dev_reg_addr->d_command = (cylNo << CYLNUM_SHIFT) + SEEKCYL; /*seek*/
             int disk_status = SYSCALL(IOWAIT, DISKINT, devNo, 0);
@@ -198,13 +198,13 @@ void write_to_disk_for_pager(int devNo, int sectNo2D, int src, support_t *curren
  *
  *  Reads a block of data from the disk for the pager. The function 
  *  calculates the cylinder, head, and sector number based on 
- *  the 2D sector number, and initiates the read operation from 
+ *  the 1D sector number, and initiates the read operation from 
  *  the disk. If the sector number exceeds the disk's capacity, 
- *  a trap is triggered.
+ *  terminate
  *
  *  Parameters:
  *         int devNo – the device number for the disk
- *         int sectNo2D – the 2D sector number to read from
+ *         int sectNo1D – the 1D sector number to read from
  *         int dst – the destination address to store the data
  *         support_t *currentSupport – pointer to the support struct
  *
@@ -212,7 +212,7 @@ void write_to_disk_for_pager(int devNo, int sectNo2D, int src, support_t *curren
  *         int – disk status (READY or error code)
  *
  **********************************************************/
-HIDDEN void read_from_disk_for_pager(int devNo, int sectNo2D, int dst, support_t *currentSupport){
+HIDDEN void read_from_disk_for_pager(int devNo, int sectNo1D, int dst, support_t *currentSupport){
 	int disk_sem_idx = devSemIdx(DISKINT, devNo, FALSE);
 
     device_t *disk_dev_reg_addr = devAddrBase(DISKINT, devNo);
@@ -222,16 +222,16 @@ HIDDEN void read_from_disk_for_pager(int devNo, int sectNo2D, int dst, support_t
     int maxhead = ((disk_dev_reg_addr->d_data1) >> MAXHEAD_SHIFT) & 0xFF;
     int maxsect = (disk_dev_reg_addr->d_data1) & 0xFF;
 
-    if (sectNo2D > (maxcyl*maxhead*maxsect)){
+    if (sectNo1D > (maxcyl*maxhead*maxsect)){
         program_trap_handler(currentSupport, NULL);
     }
 
 	/*start writing with mutex*/
     SYSCALL(PASSERN, &(mutex[disk_sem_idx]), 0, 0);
 	/*get the location and do dsk seek to get to the right location on disk*/
-        int sectNo = (sectNo2D % (maxhead * maxsect)) % maxsect;
-		int headNo = (sectNo2D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
-    	int cylNo = sectNo2D / (maxhead*maxsect);
+        int sectNo = (sectNo1D % (maxhead * maxsect)) % maxsect;
+		int headNo = (sectNo1D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
+    	int cylNo = sectNo1D / (maxhead*maxsect);
         setSTATUS(getSTATUS() & (~IECBITON));
             disk_dev_reg_addr->d_command = (cylNo << CYLNUM_SHIFT) + SEEKCYL;
             int disk_status = SYSCALL(IOWAIT, DISKINT, devNo, 0);

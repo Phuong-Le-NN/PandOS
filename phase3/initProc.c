@@ -154,13 +154,13 @@ int helper_read_flash(int devNo, int blockNo){
  *  initiates a write operation.
  *
  *  Parameters:
- *         int secNo2D – the 2D sector number to write to
+ *         int secNo1D – the 1D sector number to write to
  *
  *  Returns:
  *         int – disk status (READY or error code)
  *
  **********************************************************/
-int helper_write_disk(int secNo2D){
+int helper_write_disk(int secNo1D){
     int devNo = RESERVED_DISK_NO;
     int disk_sem_idx = devSemIdx(DISKINT, devNo, FALSE);
 
@@ -170,9 +170,9 @@ int helper_write_disk(int secNo2D){
     int maxhead = ((disk_dev_reg_addr->d_data1) >> 8) & 0xFF;
     int maxsect = (disk_dev_reg_addr->d_data1) & 0xFF;
 
-    int sectNo = (secNo2D % (maxhead * maxsect)) % maxsect;
-	int headNo = (secNo2D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
-    int cylNo = secNo2D / (maxhead * maxsect);
+    int sectNo = (secNo1D % (maxhead * maxsect)) % maxsect;
+	int headNo = (secNo1D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
+    int cylNo = secNo1D / (maxhead * maxsect);
     setSTATUS(getSTATUS() & (~IECBITON));
         disk_dev_reg_addr->d_command = (cylNo << CYLNUM_SHIFT) + SEEKCYL; /*seek*/
         int disk_status = SYSCALL(IOWAIT, DISKINT, devNo, 0);
