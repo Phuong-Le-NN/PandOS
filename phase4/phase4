@@ -6,10 +6,6 @@
     "bootstrap-rom": "/usr/share/umps3/coreboot.rom.umps",
     "clock-rate": 1,
     "devices": {
-        "disk0": {
-            "enabled": true,
-            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/disk0.umps"
-        },
         "disk1": {
             "enabled": true,
             "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/disk1.umps"
