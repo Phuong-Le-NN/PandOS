@@ -1,0 +1,123 @@
+{
+    "boot": {
+        "core-file": "kernel.core.umps",
+        "load-core-file": true
+    },
+    "bootstrap-rom": "/usr/share/umps3/coreboot.rom.umps",
+    "clock-rate": 1,
+    "devices": {
+        "disk0": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/disk0.umps"
+        },
+        "disk1": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/disk1.umps"
+        },
+        "flash0": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/testers/diskIOtest.umps"
+        },
+        "flash1": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/testers/phase4Test.umps"
+        },
+        "flash2": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/testers/delayTest.umps"
+        },
+        "flash3": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/testers/fibEight.umps"
+        },
+        "flash4": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/testers/printerTest.umps"
+        },
+        "flash5": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/testers/strConcat.umps"
+        },
+        "flash6": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/testers/terminalReader.umps"
+        },
+        "flash7": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/testers/timeOfDay.umps"
+        },
+        "printer0": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/print0.umps"
+        },
+        "printer1": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/print1.umps"
+        },
+        "printer2": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/print2.umps"
+        },
+        "printer3": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/print3.umps"
+        },
+        "printer4": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/print4.umps"
+        },
+        "printer5": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/print5.umps"
+        },
+        "printer6": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/print6.umps"
+        },
+        "printer7": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/print7.umps"
+        },
+        "terminal0": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/term0.umps"
+        },
+        "terminal1": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/term1.umps"
+        },
+        "terminal2": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/term2.umps"
+        },
+        "terminal3": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/term3.umps"
+        },
+        "terminal4": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/term4.umps"
+        },
+        "terminal5": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/term5.umps"
+        },
+        "terminal6": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/term6.umps"
+        },
+        "terminal7": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase4/term7.umps"
+        }
+    },
+    "execution-rom": "/usr/share/umps3/exec.rom.umps",
+    "num-processors": 1,
+    "num-ram-frames": 512,
+    "symbol-table": {
+        "asid": 64,
+        "file": "kernel.stab.umps"
+    },
+    "tlb-floor-address": "0x80000000",
+    "tlb-size": 16
+}
