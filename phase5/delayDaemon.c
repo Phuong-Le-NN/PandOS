@@ -17,7 +17,6 @@
  *      Hidden functions include:
  *          - allocDelayd(), freeDelayd(), traverseADL(): for ADL maintenance.
  *          - delay_daemon(): Infinite loop executed by the Delay Daemon.
- *      Mutual exclusion on the ADL is ensured via ADL_mutex, a binary semaphore.
  *      Modified by Phuong Le 2025
  */
 
