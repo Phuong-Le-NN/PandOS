@@ -224,7 +224,7 @@ void test() {
 	}
 
 	initSwapStruct();
-	set_up_backing_store();
+	/*set_up_backing_store();*/
 	initADL();
 
 	support_t initSupportPTRArr[UPROC_NUM + 1]; /*1 extra sentinel node*/
