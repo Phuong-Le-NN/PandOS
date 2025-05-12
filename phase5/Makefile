@@ -7,8 +7,7 @@
 # If you have umps3 installed on some weird location, set UMPS3_DIR_PREFIX by hand.
 ifneq ($(wildcard /usr/bin/umps3),)
 	UMPS3_DIR_PREFIX = /usr
-	LIBDIR = $(UMPS3_DIR_PREFIX)/lib/aarch64-linux-gnu/umps3
-	# LIBDIR = $(UMPS3_DIR_PREFIX)/lib/x86_64-linux-gnu/umps3
+	LIBDIR = $(UMPS3_DIR_PREFIX)/lib/x86_64-linux-gnu/umps3
 	
 else
 	UMPS3_DIR_PREFIX = /usr/local
@@ -19,13 +18,21 @@ INCDIR = $(UMPS3_DIR_PREFIX)/include/umps3/umps
 SUPDIR = $(UMPS3_DIR_PREFIX)/share/umps3
 #LIBDIR = $(UMPS3_DIR_PREFIX)/lib/umps3
 
-TDEFS = ../h/print.h ../h/tconst.h $(INCDIR)/libumps.h Makefile delayDaemon.h
+DEFS = ../h/const.h ../h/types.h ../h/pcb.h ../h/asl.h \
+	../h/initial.h ../h/interrupts.h ../h/scheduler.h ../h/exceptions.h \
+	../h/initProc.h ../h/vmSupport.h ../h/sysSupport.h \
+	$(INCDIR)/libumps.h Makefile
 
-CFLAGS = -ffreestanding -ansi -c -mips1 -mabi=32 -mfp32 -mno-gpopt -G 0 -fno-pic -mno-abicalls
-# -Wall
+OBJS = ../phase1/asl.o ../phase1/pcb.o \
+       ../phase2/initial.o ../phase2/interrupts.o ../phase2/scheduler.o ../phase2/exceptions.o \
+       ../phase3/initProc.o ../phase3/vmSupport.o ../phase3/sysSupport.o \
+	   delayDaemon.o
+
+CFLAGS = -ffreestanding -ansi -Wall -c -mips1 -mabi=32 -mfp32 -mno-gpopt -G 0 -fno-pic -mno-abicalls
 
 LDAOUTFLAGS = -G 0 -nostdlib -T $(SUPDIR)/umpsaout.ldscript
 LDCOREFLAGS =  -G 0 -nostdlib -T $(SUPDIR)/umpscore.ldscript
+
 
 CC = mipsel-linux-gnu-gcc
 LD = mipsel-linux-gnu-ld
@@ -35,21 +42,31 @@ EF = umps3-elf2umps
 UDEV = umps3-mkdev
 
 #main target
-all: delayTest.umps diskIOtest.umps pvTestA.umps pvTestB.umps
-	
-%.o: %.c $(TDEFS)
-	$(CC) $(CFLAGS) $<
-	
-%.t: %.o print.o  $(LIBDIR)/crti.o
-	$(LD) $(LDAOUTFLAGS) $(LIBDIR)/crti.o $< print.o $(LIBDIR)/libumps.o -o $@
-	
-%.t.aout.umps: %.t
-	$(EF) -a $<
+all: kernel.core.umps 
 
-%.umps: %.t.aout.umps
-	$(UDEV) -f $@ $<
+kernel.core.umps: kernel
+	$(EF) -k kernel
+
+kernel: $(OBJS)
+	$(LD) $(LDCOREFLAGS) $(LIBDIR)/crtso.o $(OBJS) $(LIBDIR)/libumps.o -o kernel
+
+%.o: %.c $(DEFS)
+	$(CC) $(CFLAGS) $<
 
 
 clean:
-	rm -f *.o *.t *.umps
+	rm -f *.o *.umps kernel ../phase1/*.o ../phase1/*.umps ../phase1/kernel ../phase2/*.o ../phase2/*.umps ../phase2/kernel ../phase4/*.o ../phase4/*.umps ../phase4/kernel ../phase5/*.o ../phase5/*.umps ../phase5/kernel
 
+
+distclean: clean
+	-rm kernel.*.umps tape0.umps
+
+TERMS = term0.umps term1.umps term2.umps term3.umps term4.umps term5.umps term6.umps term7.umps
+PRINTS = print0.umps print1.umps print2.umps print3.umps print4.umps print5.umps print6.umps print7.umps
+
+# Target to create all term files
+# Combined target
+devices: $(TERMS) $(PRINTS)
+# Generic rule for both termX.umps and printX.umps
+%.umps:
+	touch $@

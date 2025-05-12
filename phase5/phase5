@@ -1,0 +1,115 @@
+{
+    "boot": {
+        "core-file": "kernel.core.umps",
+        "load-core-file": true
+    },
+    "bootstrap-rom": "/usr/share/umps3/coreboot.rom.umps",
+    "clock-rate": 1,
+    "devices": {
+        "flash0": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/testers/asciiArt.umps"
+        },
+        "flash1": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/testers/delayTest.umps"
+        },
+        "flash2": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/testers/fibEight.umps"
+        },
+        "flash3": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/testers/strConcat.umps"
+        },
+        "flash4": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/testers/swapStress.umps"
+        },
+        "flash5": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/testers/timeOfDay.umps"
+        },
+        "flash6": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/testers/terminalReader.umps"
+        },
+        "flash7": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/testers/printerTest.umps"
+        },
+        "printer0": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/print0.umps"
+        },
+        "printer1": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/print1.umps"
+        },
+        "printer2": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/print2.umps"
+        },
+        "printer3": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/print3.umps"
+        },
+        "printer4": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/print4.umps"
+        },
+        "printer5": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/print5.umps"
+        },
+        "printer6": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/print6.umps"
+        },
+        "printer7": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/print7.umps"
+        },
+        "terminal0": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/term0.umps"
+        },
+        "terminal1": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/term1.umps"
+        },
+        "terminal2": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/term2.umps"
+        },
+        "terminal3": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/term3.umps"
+        },
+        "terminal4": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/term4.umps"
+        },
+        "terminal5": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/term5.umps"
+        },
+        "terminal6": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/term6.umps"
+        },
+        "terminal7": {
+            "enabled": true,
+            "file": "/Users/le_p2/Documents/CS372/OperatingSystemCS372/phase5/term7.umps"
+        }
+    },
+    "execution-rom": "/usr/share/umps3/exec.rom.umps",
+    "num-processors": 1,
+    "num-ram-frames": 512,
+    "symbol-table": {
+        "asid": 64,
+        "file": "kernel.stab.umps"
+    },
+    "tlb-floor-address": "0x80000000",
+    "tlb-size": 16
+}
