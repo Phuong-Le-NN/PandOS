@@ -89,18 +89,21 @@ int init_Uproc(support_t *initSupportPTR, int ASID) {
 	int newPcbStat = SYSCALL(1, &initState, initSupportPTR, 0);
 	return newPcbStat;
 }
-
 /**********************************************************
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
-*/
-
+ *  helper_copy_block
+ *
+ *  Copies a block of data from the source address to the 
+ *  destination address. The block is copied in 4-byte 
+ *  increments based on the block size.
+ *
+ *  Parameters:
+ *         int *src – pointer to the source address
+ *         int *dst – pointer to the destination address
+ *
+ *  Returns:
+ *         None
+ *
+ **********************************************************/
 void helper_copy_block(int *src, int *dst){
     int i;
     for (i = 0; i < (BLOCKSIZE/4); i++){
@@ -110,15 +113,25 @@ void helper_copy_block(int *src, int *dst){
     }
 }
 
+/**********************************************************
+ *  helper_read_flash
+ *
+ *  Reads a block of data from the flash storage. This function 
+ *  calculates the appropriate memory address for the flash 
+ *  storage and initiates a read operation.
+ *
+ *  Parameters:
+ *         int devNo – the device number of the flash storage
+ *         int blockNo – the block number to read from the flash storage
+ *
+ *  Returns:
+ *         int – flash status (READY or error code)
+ *
+ **********************************************************/
 int helper_read_flash(int devNo, int blockNo){
     int flash_sem_idx = devSemIdx(FLASHINT, devNo, FALSE);
 
     device_t *flash_dev_reg_addr = devAddrBase(FLASHINT, devNo);
-
-	/*delete this condition out after finishing -- this should never be called*/
-    if (blockNo > 32){
-        SYSCALL(TERMINATETHREAD, 0, 0, 0);
-    }
     
     flash_dev_reg_addr->d_data0 = FLASK_DMA_BUFFER_BASE_ADDR + (BLOCKSIZE*devNo);
     setSTATUS(getSTATUS() & (~IECBITON));
@@ -133,7 +146,21 @@ int helper_read_flash(int devNo, int blockNo){
     }
 }
 
-int helper_write_disk(int secNo2D){
+/**********************************************************
+ *  helper_write_disk
+ *
+ *  Writes a block of data to the disk. This function calculates 
+ *  the appropriate cylinder, head, and sector numbers and 
+ *  initiates a write operation.
+ *
+ *  Parameters:
+ *         int secNo1D – the 1D sector number to write to
+ *
+ *  Returns:
+ *         int – disk status (READY or error code)
+ *
+ **********************************************************/
+int helper_write_disk(int secNo1D){
     int devNo = RESERVED_DISK_NO;
     int disk_sem_idx = devSemIdx(DISKINT, devNo, FALSE);
 
@@ -143,14 +170,9 @@ int helper_write_disk(int secNo2D){
     int maxhead = ((disk_dev_reg_addr->d_data1) >> 8) & 0xFF;
     int maxsect = (disk_dev_reg_addr->d_data1) & 0xFF;
 
-	/*delete this out after finishing -- should never happen*/
-    if (secNo2D > (maxcyl*maxhead*maxsect)){
-        SYSCALL(TERMINATETHREAD, 0, 0, 0);
-    }
-
-    int sectNo = (secNo2D % (maxhead * maxsect)) % maxsect;
-	int headNo = (secNo2D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
-    int cylNo = secNo2D / (maxhead * maxsect);
+    int sectNo = (secNo1D % (maxhead * maxsect)) % maxsect;
+	int headNo = (secNo1D % (maxhead * maxsect)) / maxsect; /*divide and round down*/
+    int cylNo = secNo1D / (maxhead * maxsect);
     setSTATUS(getSTATUS() & (~IECBITON));
         disk_dev_reg_addr->d_command = (cylNo << CYLNUM_SHIFT) + SEEKCYL; /*seek*/
         int disk_status = SYSCALL(IOWAIT, DISKINT, devNo, 0);
@@ -172,6 +194,22 @@ int helper_write_disk(int secNo2D){
     }
 }
 
+/**********************************************************
+ *  set_up_backing_store
+ *
+ *  Sets up the backing store by reading pages from flash 
+ *  storage and writing them to disk. This function iterates 
+ *  through all the pages of each device and performs the 
+ *  reading and writing operations using the helper functions.
+ *  Mutexes are used to ensure thread synchronization.
+ *
+ *  Parameters:
+ *         None
+ *
+ *  Returns:
+ *         None
+ *
+ **********************************************************/
 void set_up_backing_store(){
 	int devNo;
 	int pageNo;
@@ -190,10 +228,11 @@ void set_up_backing_store(){
 
 			SYSCALL(PASSERN, &(mutex[flash_sem_idx]), 0, 0);
 
+				/*read from flash*/
 				flash_status = helper_read_flash(devNo, pageNo);
-				
+				/*copy from flahs buffer to dsk buffer*/
 				helper_copy_block(FLASK_DMA_BUFFER_BASE_ADDR + (BLOCKSIZE*devNo), DISK_DMA_BUFFER_BASE_ADDR + (BLOCKSIZE*devNo));
-				
+				/*write to disk*/
 				disk_status = helper_write_disk(32*devNo + pageNo);
 
 			SYSCALL(VERHO, &(mutex[flash_sem_idx]), 0, 0);
@@ -224,7 +263,7 @@ void test() {
 	}
 
 	initSwapStruct();
-	/*set_up_backing_store();*/
+	set_up_backing_store();
 	initADL();
 
 	support_t initSupportPTRArr[UPROC_NUM + 1]; /*1 extra sentinel node*/
